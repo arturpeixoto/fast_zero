@@ -27,6 +27,32 @@ def test_create_user(client):
     }
 
 
+def test_create_user_username_already_exists(client, user):
+    response = client.post(
+        '/users',
+        json={
+            'username': 'carol',
+            'email': 'carol@example.com',
+            'password': 'mynewpassword',
+        },
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Username already exists'}
+
+
+def test_create_user_email_already_exists(client, user):
+    response = client.post(
+        '/users',
+        json={
+            'username': 'carol1',
+            'email': 'carol@example.com',
+            'password': 'mynewpassword',
+        },
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Email already exists'}
+
+
 def test_read_users(client):
     response = client.get('/users')
     assert response.status_code == HTTPStatus.OK
@@ -39,7 +65,7 @@ def test_read_users_with_users(client, user):
     assert response.json() == {'users': [user_schema]}
 
 
-def test_get_user(client):
+def test_get_user(client, user):
     response = client.get(
         '/users/1',
     )
@@ -51,7 +77,7 @@ def test_get_user(client):
     }
 
 
-def test_get_not_found(client):
+def test_get_not_found(client, user):
     response = client.get(
         '/users/99999',
     )
@@ -59,7 +85,7 @@ def test_get_not_found(client):
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_update_user(client):
+def test_update_user(client, user):
     response = client.put(
         '/users/1',
         json={
@@ -76,7 +102,7 @@ def test_update_user(client):
     }
 
 
-def test_update_not_found(client):
+def test_update_not_found(client, user):
     response = client.put(
         '/users/99999',
         json={
@@ -89,7 +115,7 @@ def test_update_not_found(client):
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_delete_user(client):
+def test_delete_user(client, user):
     response = client.delete(
         '/users/1',
     )
@@ -97,7 +123,7 @@ def test_delete_user(client):
     assert response.json() == {'message': 'User deleted'}
 
 
-def test_delete_not_found(client):
+def test_delete_not_found(client, user):
     response = client.delete(
         '/users/99999',
     )
