@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 from fast_zero.app import app
 from fast_zero.database import get_session
 from fast_zero.models import User, table_registry
-from fast_zero.security import ALGORITHM, SECRET_KEY, get_password_hash
+from fast_zero.security import get_password_hash, settings
 
 
 @pytest.fixture
@@ -65,5 +65,7 @@ def token(client, user):
 @pytest.fixture
 def non_existent_user_token():
     token_data = {'sub': 'non_existent_user@example.com'}
-    token = encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+    token = encode(
+        token_data, key=settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
     return token
