@@ -170,7 +170,7 @@ def test_delete_no_permission(client, user, token):
 
 def test_get_token(client, user):
     response = client.post(
-        '/token',
+        '/auth/token',
         data={'username': user.email, 'password': user.clean_password},
     )
     token = response.json()
@@ -182,7 +182,7 @@ def test_get_token(client, user):
 
 def test_get_token_not_valid_username(client, user):
     response = client.post(
-        '/token',
+        '/auth/token',
         data={'username': 'artur', 'password': user.password},
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -191,7 +191,7 @@ def test_get_token_not_valid_username(client, user):
 
 def test_get_token_not_valid_password(client, user):
     response = client.post(
-        '/token',
+        '/auth/token',
         data={'username': user.email, 'password': '123'},
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
