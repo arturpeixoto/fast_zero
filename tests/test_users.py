@@ -7,15 +7,15 @@ def test_create_user(client):
     response = client.post(
         '/users',
         json={
-            'username': 'carol',
-            'email': 'carol@example.com',
-            'password': 'secret',
+            'username': 'test1',
+            'email': 'test1@test.com',
+            'password': 'test1@example.com',
         },
     )
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
-        'username': 'carol',
-        'email': 'carol@example.com',
+        'username': 'test1',
+        'email': 'test1@test.com',
         'id': 1,
     }
 
@@ -24,9 +24,9 @@ def test_create_user_username_already_exists(client, user):
     response = client.post(
         '/users',
         json={
-            'username': 'carol',
-            'email': 'carol@example.com',
-            'password': 'mynewpassword',
+            'username': user.username,
+            'email': 'test1@test.com',
+            'password': 'test1@example.com',
         },
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -37,9 +37,9 @@ def test_create_user_email_already_exists(client, user):
     response = client.post(
         '/users',
         json={
-            'username': 'carol1',
-            'email': 'carol@example.com',
-            'password': 'mynewpassword',
+            'username': 'test1',
+            'email': user.email,
+            'password': 'test1@example.com',
         },
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -60,17 +60,17 @@ def test_read_users_with_users(client, user):
 
 def test_get_user(client, user):
     response = client.get(
-        '/users/1',
+        f'/users/{user.id}',
     )
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'username': 'carol',
-        'email': 'carol@example.com',
-        'id': 1,
+        'username': user.username,
+        'email': user.email,
+        'id': user.id,
     }
 
 
-def test_get_not_found(client, user):
+def test_get_not_found(client):
     response = client.get(
         '/users/99999',
     )
@@ -96,7 +96,7 @@ def test_update_user(client, user, token):
     }
 
 
-def test_update_not_authenticated(client, user, token):
+def test_update_not_authenticated(client, user):
     response = client.put(
         f'/users/{user.id}',
         json={
@@ -109,9 +109,9 @@ def test_update_not_authenticated(client, user, token):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
-def test_update_no_permission(client, user, token):
+def test_update_wrong_user(client, other_user, token):
     response = client.put(
-        '/users/2',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'bob',
@@ -123,9 +123,10 @@ def test_update_no_permission(client, user, token):
     assert response.json() == {'detail': 'Not enough permissions'}
 
 
+# Teste redundante
 def test_update_non_existent_user(client, non_existent_user_token):
     response = client.put(
-        '/users/1',
+        '/users/99999',
         headers={'Authorization': f'Bearer {non_existent_user_token}'},
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
@@ -141,7 +142,7 @@ def test_delete_user(client, user, token):
     assert response.json() == {'message': 'User deleted'}
 
 
-def test_delete_not_authenticated(client, user, token):
+def test_delete_not_authenticated(client, user):
     response = client.delete(
         f'/users/{user.id}',
     )
@@ -149,10 +150,20 @@ def test_delete_not_authenticated(client, user, token):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
-def test_delete_no_permission(client, user, token):
+def test_delete_wrong_user(client, other_user, token):
     response = client.delete(
-        '/users/2',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {'detail': 'Not enough permissions'}
+
+
+# Teste redundante
+def test_delete_non_existent_user(client, non_existent_user_token):
+    response = client.delete(
+        '/users/99999',
+        headers={'Authorization': f'Bearer {non_existent_user_token}'},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {'detail': 'Could not validate credentials'}

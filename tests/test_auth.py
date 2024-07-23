@@ -54,3 +54,8 @@ def test_jwt_invalid_token(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {'detail': 'Could not validate credentials'}
+
+
+# async def test_get_current_user_without_sub():
+#     with pytest.raises(HTTPException):
+#         await get_current_user({})
