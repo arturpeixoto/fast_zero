@@ -1,8 +1,6 @@
 from http import HTTPStatus
 
-from jwt import decode
-
-from fast_zero.security import create_access_token, settings
+from freezegun import freeze_time
 
 
 def test_get_token(client, user):
@@ -35,27 +33,24 @@ def test_get_token_not_valid_password(client, user):
     assert response.json() == {'detail': 'Incorrect email or password'}
 
 
-def test_jwt():
-    data = {'test': 'test'}
-    token = create_access_token(data)
+def test_token_expired_after_time(client, user):
+    with freeze_time('2023-07-14 12:00:00'):
+        response = client.post(
+            '/auth/token',
+            data={'username': user.email, 'password': user.clean_password},
+        )
+        assert response.status_code == HTTPStatus.OK
+        token = response.json()['access_token']
 
-    decoded = decode(
-        token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-    )
-
-    assert decoded['test'] == data['test']
-    assert decoded['exp']
-
-
-def test_jwt_invalid_token(client):
-    response = client.delete(
-        '/users/1', headers={'Authorization': 'Bearer token-invalido'}
-    )
-
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json() == {'detail': 'Could not validate credentials'}
-
-
-# async def test_get_current_user_without_sub():
-#     with pytest.raises(HTTPException):
-#         await get_current_user({})
+    with freeze_time('2023-07-14 12:31:00'):
+        response = client.put(
+            f'/users/{user.id}',
+            headers={'Authorization': f'Bearer {token}'},
+            json={
+                'username': 'wrongwrong',
+                'email': 'wrong@wrong.com',
+                'password': 'wrong',
+            },
+        )
+        assert response.status_code == HTTPStatus.UNAUTHORIZED
+        assert response.json() == {'detail': 'Could not validate credentials'}

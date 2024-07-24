@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jwt import DecodeError, decode, encode
+from jwt import DecodeError, ExpiredSignatureError, PyJWTError, decode, encode
 from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -39,7 +39,7 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-async def get_current_user(
+def get_current_user(
     session: Session = Depends(get_session),
     token: str = Depends(oauth2_scheme),
 ):
@@ -48,7 +48,6 @@ async def get_current_user(
         detail='Could not validate credentials',
         headers={'WWW-Authenticate': 'Bearer'},
     )
-
     try:
         payload = decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
@@ -59,6 +58,10 @@ async def get_current_user(
         token_data = TokenData(username=username)
     except DecodeError:
         raise credentials_exception
+    except ExpiredSignatureError:
+        raise credentials_exception
+    except PyJWTError:
+        raise credentials_exception  # pragma: no cover
 
     user = session.scalar(
         select(User).where(User.email == token_data.username)
