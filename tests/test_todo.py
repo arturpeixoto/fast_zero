@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 
 from fast_zero.models import TodoState
@@ -14,12 +15,21 @@ def test_create_todo(client, token):
             'state': 'draft',
         },
     )
-    assert response.json() == {
-        'id': 1,
-        'title': 'Test todo',
-        'description': 'Test todo description',
-        'state': 'draft',
-    }
+    response_data = response.json()
+    assert response.status_code == HTTPStatus.OK
+    assert response_data['title'] == 'Test todo'
+    assert response_data['description'] == 'Test todo description'
+    assert response_data['state'] == 'draft'
+    assert 'id' in response_data
+    assert 'created_at' in response_data
+    assert 'updated_at' in response_data
+
+    assert isinstance(
+        datetime.fromisoformat(response_data['created_at']), datetime
+    )
+    assert isinstance(
+        datetime.fromisoformat(response_data['updated_at']), datetime
+    )
 
 
 def test_list_todos_should_return_5_todos(session, client, user, token):
