@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from fast_zero.models import TodoState
 from tests.conftest import TodoFactory
 
@@ -130,3 +132,103 @@ def test_list_todos_filter_combined_should_return_5_todos(
     )
 
     assert len(response.json()['todos']) == expected_todos
+
+
+def test_delete_todo(session, client, user, token):
+    todo = TodoFactory(user_id=user.id)
+
+    session.add(todo)
+    session.commit()
+
+    response = client.delete(
+        f'/todos/{todo.id}', headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'message': 'Task deleted'}
+
+
+def test_delete_todo_not_found(session, client, user, token):
+    todo = TodoFactory(user_id=user.id)
+
+    session.add(todo)
+    session.commit()
+
+    response = client.delete(
+        '/todos/10', headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Task not found'}
+
+
+def test_patch_todo_title(session, client, user, token):
+    todo = TodoFactory(user_id=user.id)
+
+    session.add(todo)
+    session.commit()
+
+    update_todo = {'title': 'Vai Brasil'}
+
+    response = client.patch(
+        f'/todos/{todo.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json=update_todo,
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['title'] == 'Vai Brasil'
+
+
+def test_patch_todo_description(session, client, user, token):
+    todo = TodoFactory(user_id=user.id)
+
+    session.add(todo)
+    session.commit()
+
+    update_todo = {'description': 'Vai Brasil'}
+
+    response = client.patch(
+        f'/todos/{todo.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json=update_todo,
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['description'] == 'Vai Brasil'
+
+
+def test_patch_todo_state(session, client, user, token):
+    todo = TodoFactory(user_id=user.id, state='draft')
+
+    session.add(todo)
+    session.commit()
+
+    update_todo = {'state': 'done'}
+
+    response = client.patch(
+        f'/todos/{todo.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json=update_todo,
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['state'] == 'done'
+
+
+def test_patch_todo_not_found(session, client, user, token):
+    todo = TodoFactory(user_id=user.id)
+
+    session.add(todo)
+    session.commit()
+
+    update_todo = {'title': 'Vai Brasil'}
+
+    response = client.patch(
+        '/todos/10',
+        headers={'Authorization': f'Bearer {token}'},
+        json=update_todo,
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Task not found'}
