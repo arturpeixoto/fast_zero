@@ -16,7 +16,7 @@ def test_create_todo(client, token):
         },
     )
     response_data = response.json()
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.CREATED
     assert response_data['title'] == 'Test todo'
     assert response_data['description'] == 'Test todo description'
     assert response_data['state'] == 'draft'

@@ -22,7 +22,7 @@ T_Session = Annotated[Session, Depends(get_session)]
 T_CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-@router.post('/', response_model=TodoPublic)
+@router.post('/', status_code=HTTPStatus.CREATED, response_model=TodoPublic)
 def create_todo(
     user: T_CurrentUser,
     todo: TodoSchema,
