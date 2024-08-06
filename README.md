@@ -1,4 +1,4 @@
-# FastAPI Project
+# FastAPI - FAST DO ZERO
 
 Este projeto foi desenvolvido utilizando FastAPI, uma moderna e rápida framework para construção de APIs com Python. A seguir, você encontrará informações sobre as tecnologias utilizadas, o passo a passo para rodar a aplicação, como executar os testes e onde encontrar mais informações sobre o desenvolvedor.
 
